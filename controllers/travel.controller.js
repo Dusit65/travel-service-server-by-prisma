@@ -5,9 +5,20 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
+//import to use Cloudinary
+const { v2: cloudinary } = require("cloudinary");
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
 //Use prisma to co working with DB
 const { PrismaClient } = require("@prisma/client"); //Models
 const prisma = new PrismaClient();
+
+//config cloudinary
+cloudinary.config({ 
+  cloud_name: 'dtaoywhpf', 
+  api_key: '646185354323959', 
+  api_secret: 'G7FBhJLwqBsgkdAt_V36Dgzm1L4' // Click 'View API Keys' above to copy your API secret
+});
 //++++++++++++++++++++++++++++++ End of Require +++++++++++++++++++++++++++++++++
 
 //+++++++++++++++++++++++++ INSERT UPDATE DELETE FUNC ++++++++++++++++++++++++++++++++++++
@@ -175,18 +186,31 @@ exports.deleteTravel = async (req, res) => {
 };
 
 //++++++++++++++++++++ Travel Image upload function +++++++++++++++++++++++++++++++++
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "images/travel");
-  },
-  filename: function (req, file, cb) {
-    cb(
-      null,
-      "travel_" +
-        Math.floor(Math.random() * Date.now()) +
-        path.extname(file.originalname)
-    );
-  },
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, "images/travel");
+//   },
+//   filename: function (req, file, cb) {
+//     cb(
+//       null,
+//       "travel_" +
+//         Math.floor(Math.random() * Date.now()) +
+//         path.extname(file.originalname)
+//     );
+//   },
+// });
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    const newFile = 'travel_' + Math.floor(Math.random() * Date.now());
+
+    return {
+      folder: "images/travel",
+      allowed_formats: ["jpg", "png", "jpeg"],
+      public_id: newFile,
+    };
+  }
 });
 
 exports.uploadTravel = multer({
